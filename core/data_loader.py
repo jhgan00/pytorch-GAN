@@ -39,6 +39,7 @@ def get_train_loader(root, dataset, img_size, batch_size, num_workers):
         train_dataset = None
         pass
 
+    print(f"total {len(train_dataset)} examples ...")
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,

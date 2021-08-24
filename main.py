@@ -39,23 +39,22 @@ if __name__ == "__main__":
 
     parser.add_argument("--mode", type=str, choices=['train', 'test'], default="train")
 
-    parser.add_argument("--latent_dim", type=int, default=128)
-    parser.add_argument("--epochs", type=int, default=25)
+    parser.add_argument("--epochs", type=int, default=50)
+    parser.add_argument("--resume_epoch", type=int, default=0)
+    parser.add_argument("--checkpoint_every", type=int, default=50)
+
+    parser.add_argument("--latent_dim", type=int, default=100)
+    parser.add_argument("--img_size", type=int, default=28)
     parser.add_argument("--num_channels", type=int, default=1)
 
-    parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--lr", type=float, default=2e-4)
     parser.add_argument("--beta_1", type=float, default=0.5)
     parser.add_argument("--beta_2", type=float, default=0.999)
-    parser.add_argument("--img_size", type=int, default=28)
-    parser.add_argument("--resume_epoch", type=int, default=0)
+    parser.add_argument("--batch_size", type=int, default=256)
 
     parser.add_argument("--root", type=str, default="./data")
     parser.add_argument("--dataset", type=str, choices=['MNIST', 'CIFAR10', 'custom'], default="MNIST")
-    parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--num_workers", type=int, default=4)
-
-    parser.add_argument("--seed", type=int, default=777)
-    parser.add_argument("--checkpoint_every", type=int, default=5)
 
     parser.add_argument("--n_samples", type=int, default=25)
     parser.add_argument("--test_checkpoint", type=int, default=25)
@@ -63,6 +62,8 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint_dir", type=str, default="checkpoints")
     parser.add_argument("--sample_dir", type=str, default="samples")
     parser.add_argument("--test_dir", type=str, default="test")
+
+    parser.add_argument("--seed", type=int, default=777)
 
     args = parser.parse_args()
 
