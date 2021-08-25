@@ -1,29 +1,96 @@
 # A PyTorch Implementation of Generative Adversarial Nets
 
-파이토치로 구현된 Generative Adversarial Nets (Goodfellow et al, 2014) 코드입니다.
-모델의 구조와 학습 스케줄은 [공식 깃허브 저장소](https://github.com/goodfeli/adversarial) 를 기준으로 만들어졌습니다.
-현재 `torchvision.datasets.MNIST` 데이터셋에 대한 학습을 지원합니다.
+This is a PyTorch implementation of Generative Adversarial Nets(Goodfellow et al, 2014).
+The model's structure and training schedule are based on the author's [original implementation](https://github.com/goodfeli/adversarial).
+This code currently supports training on `torchvision.datasets.MNIST`.
+The structure of the code mimics [stargan-v2](https://github.com/clovaai/stargan-v2) repository.
 
-![](assets/epoch_0300.png)
+Fake images at epoch 250 |  Latent vector interpolation
+:-------------------------:|:-------------------------:
+![](assets/MNIST-samples.png)  |![](assets/MNIST-latent.png)
 
 ## Training
 
+If you run the code in training mode as shown below, you will make 250 epochs, and the checkpoints will be saved in the `checkpoints` directory every 50 epochs.
+`samples` directory stores sample images that are generated for each epoch.
+If you want to resume training from a saved checkpoint, you can set the epoch number in `--resume_epoch` argument.
+To resume training, the checkpoint file for the appropriate epoch must exist.
 
 ```bash
-# MNIST: 하이퍼파라미터들의 기본값은 MNIST 데이터를 기준으로 세팅되어있습니다
-python main.py --mode train --dataset MNIST
+python main.py \
+  --mode train \
+  --dataset MNIST \
+  --epochs 250 \
+  --checkpoint_dir checkpoints \
+  --sample_dir samples \
+  --checkpoint_every 50 \
+  --resume_epoch 50 # optional
 ```
 
 ## Test
 
+When you run code in test mode, the model corresponding to `test_checkpoint` is restored to create sample images.
+The generated images will be stored in the directory specified in `--test_dir` argument.
+When running in test mode, specify `--mode`, `--dataset`, and `--test_checkpoint`.
+
 ```bash
 # MNIST
-python main.py --mode test --dataset MNIST --test_checkpoint 300
+python main.py --mode test --dataset MNIST --test_checkpoint 250
 ```
+
+## Model Architecture
+
+The structure of the models applied to the MNIST dataset is as follows.
+The generator used ReLU stacks, the discriminator used dropout and maxout stacks.
+I have imitated the author's implementation as much as possible, but there may be some differences.
+The structure of the models can be modified in the `core.model` module.
+
+```
+>>> from core.model import Generator, Discriminator
+>>> g = Generator(28, 1, 100) 
+>>> print(g)
+Generator(
+  (layers): Sequential(
+    (0): Linear(in_features=100, out_features=1200, bias=True)
+    (1): ReLU()
+    (2): Linear(in_features=1200, out_features=1200, bias=True)
+    (3): ReLU()
+    (4): Linear(in_features=1200, out_features=784, bias=True)
+    (5): Sigmoid()
+  )
+)
+>>> d = Discriminator(28, 1) 
+>>> print(d)
+Discriminator(
+  (layers): Sequential(
+    (0): Flatten(start_dim=1, end_dim=-1)
+    (1): Dropout(p=0.2, inplace=False)
+    (2): LinearMaxOut(
+      (linear): Linear(in_features=784, out_features=1200, bias=True)
+    )
+    (3): Dropout(p=0.5, inplace=False)
+    (4): LinearMaxOut(
+      (linear): Linear(in_features=240, out_features=1200, bias=True)
+    )
+    (5): ReLU()
+    (6): Dropout(p=0.5, inplace=False)
+    (7): Linear(in_features=240, out_features=1, bias=True)
+    (8): Sigmoid()
+  )
+)
+```
+
+## Solver
+
+The `core.solver.Solver` class manages the actual learning loop.
+I used the SGD optimizer as implemented by the author to adjust the learning rate and momentum as the training progresses.
+Learning rates decrease exponentially every batch, and momentum increases linearly every epoch.
 
 ## Arguments
 
-param|type|default|help
+The default hyperparameters are set based on MNIST data.
+
+Argument|Type|Default|Help
 ---|---|---|---
 mode|str|"train"
 epochs|int|300|Total number of epochs

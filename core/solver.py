@@ -86,7 +86,6 @@ class Solver(object):
 
             x_real, _ = batch
             x_real = x_real.to(self.device)
-            N, C, W, H = x_real.shape
 
             self._reset_grad()
             z = self._sample_z()
@@ -108,7 +107,7 @@ class Solver(object):
             g_loss.backward()
             self.optims.G.step()
 
-            if i % 10 == 0:
+            if i % 100 == 0:
                 print(
                     f"epoch: {epoch + 1:04d}\t"
                     f"batch: {i:04d}\t"
@@ -166,12 +165,12 @@ class Solver(object):
         x_fake = torchvision.utils.make_grid(x_fake, nrow=int(args.num_samples / 5))
         torchvision.utils.save_image(x_fake, os.path.join(save_path, "samples.png"))
 
-        z1, z2 = self._sample_z(2)
-        z = torch.empty(size=(args.num_samples, args.latent_dim), device=self.device)
-        for i in range(args.num_samples):
-            torch.lerp(z1, z2, i / args.num_samples, out=z[i])
-
+        z_pairs = self._sample_z(20).reshape(10, 2, 100)
+        z = torch.empty(size=(10, 8, args.latent_dim), device=self.device)
+        for i in range(8):
+            torch.lerp(z_pairs[:, 0], z_pairs[:, 1], i / 8, out=z[:, i])
+        z = z.reshape(80, 100)
         x_fake = nets.G(z)
-        x_fake = x_fake.view(1, args.num_samples, -1, args.img_size, args.img_size)
-        x_fake = torchvision.utils.make_grid(x_fake, nrow=1)
+        x_fake = x_fake.view(80, -1, args.img_size, args.img_size)
+        x_fake = torchvision.utils.make_grid(x_fake)
         torchvision.utils.save_image(x_fake, os.path.join(save_path, "latent.png"))

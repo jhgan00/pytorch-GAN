@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--mode", type=str, choices=['train', 'test'], default="train")
 
-    parser.add_argument("--epochs", type=int, default=300,
+    parser.add_argument("--epochs", type=int, default=250,
                         help="Total number of epochs")
     parser.add_argument("--resume_epoch", type=int, default=0,
                         help="Resume training from this point")
@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--num_samples", type=int, default=25,
                         help="Number of fake images to generate")
-    parser.add_argument("--test_checkpoint", type=int, default=300,
+    parser.add_argument("--test_checkpoint", type=int, default=250,
                         help="Checkpoint number to use for testing")
 
     parser.add_argument("--checkpoint_dir", type=str, default="checkpoints",
