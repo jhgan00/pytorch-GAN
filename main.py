@@ -39,31 +39,58 @@ if __name__ == "__main__":
 
     parser.add_argument("--mode", type=str, choices=['train', 'test'], default="train")
 
-    parser.add_argument("--epochs", type=int, default=50)
-    parser.add_argument("--resume_epoch", type=int, default=0)
-    parser.add_argument("--checkpoint_every", type=int, default=50)
+    parser.add_argument("--epochs", type=int, default=300,
+                        help="Total number of epochs")
+    parser.add_argument("--resume_epoch", type=int, default=0,
+                        help="Resume training from this point")
+    parser.add_argument("--checkpoint_every", type=int, default=50,
+                        help="Save checkpoint every n epochs")
 
-    parser.add_argument("--latent_dim", type=int, default=100)
-    parser.add_argument("--img_size", type=int, default=28)
-    parser.add_argument("--num_channels", type=int, default=1)
+    parser.add_argument("--latent_dim", type=int, default=100,
+                        help="Dimensions of latent space")
+    parser.add_argument("--uniform_range", type=float, default=3 ** 0.5,
+                        help="Range of latent vector elements: Uniform(-x, x)")
+    parser.add_argument("--img_size", type=int, default=28,
+                        help="Size of input images")
+    parser.add_argument("--num_channels", type=int, default=1,
+                        help="Number of channels in input image")
 
-    parser.add_argument("--lr", type=float, default=2e-4)
-    parser.add_argument("--beta_1", type=float, default=0.5)
-    parser.add_argument("--beta_2", type=float, default=0.999)
-    parser.add_argument("--batch_size", type=int, default=256)
+    parser.add_argument("--lr", type=float, default=1e-1,
+                        help="Initial value for the learning rate")
+    parser.add_argument("--min_lr", type=float, default=1e-6,
+                        help="The learning rate will be clipped to be at least this value")
+    parser.add_argument("--decay_factor", type=float, default=1 / (1+4e-6),
+                        help="Multiplicative factor of learning rate decay")
+    parser.add_argument("--momentum", type=float, default=0.5,
+                        help="Initial value for the momentum coefficient")
+    parser.add_argument("--final_momentum", type=float, default=.7,
+                        help="The momentum coefficient to use at the end of learning")
+    parser.add_argument("--momentum_saturate", type=int, default=250,
+                        help="The epoch on which the moment should reach its final value")
+    parser.add_argument("--batch_size", type=int, default=100,
+                        help="Size of minibatch")
 
-    parser.add_argument("--root", type=str, default="./data")
-    parser.add_argument("--dataset", type=str, choices=['MNIST', 'CIFAR10', 'custom'], default="MNIST")
-    parser.add_argument("--num_workers", type=int, default=4)
+    parser.add_argument("--root", type=str, default="./data",
+                        help="Root directory where datasets will be stored")
+    parser.add_argument("--dataset", type=str, choices=['MNIST', 'CIFAR10', 'custom'], default="MNIST",
+                        help="Dataset to be used for training")
+    parser.add_argument("--num_workers", type=int, default=4,
+                        help="Number of data loader processes")
 
-    parser.add_argument("--n_samples", type=int, default=25)
-    parser.add_argument("--test_checkpoint", type=int, default=25)
+    parser.add_argument("--num_samples", type=int, default=25,
+                        help="Number of fake images to generate")
+    parser.add_argument("--test_checkpoint", type=int, default=300,
+                        help="Checkpoint number to use for testing")
 
-    parser.add_argument("--checkpoint_dir", type=str, default="checkpoints")
-    parser.add_argument("--sample_dir", type=str, default="samples")
-    parser.add_argument("--test_dir", type=str, default="test")
+    parser.add_argument("--checkpoint_dir", type=str, default="checkpoints",
+                        help="Path to save model checkpoints")
+    parser.add_argument("--sample_dir", type=str, default="samples",
+                        help="Path to save generated images")
+    parser.add_argument("--test_dir", type=str, default="test",
+                        help="Path to save test results")
 
-    parser.add_argument("--seed", type=int, default=777)
+    parser.add_argument("--seed", type=int, default=777,
+                        help="Random seed")
 
     args = parser.parse_args()
 

@@ -2,12 +2,6 @@ import torch
 from torch import nn
 
 
-def _xavier_init(m):
-    if isinstance(m, nn.Linear):
-        torch.nn.init.xavier_uniform_(m.weight)
-        torch.nn.init.zeros_(m.bias)
-
-
 class Generator(nn.Module):
     def __init__(self, img_size, num_channels, latent_dim):
         super(Generator, self).__init__()
@@ -15,32 +9,37 @@ class Generator(nn.Module):
         self.img_size = img_size
         self.num_channels = num_channels
         self.latent_dim = latent_dim
-
         self.layers = nn.Sequential(
-
-            nn.Linear(latent_dim, 128),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(128),
-
-            nn.Linear(128, 256),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(256),
-
-            nn.Linear(256, 512),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(512),
-
-            nn.Linear(512, num_channels * img_size * img_size),
-            nn.Tanh()
+            nn.Linear(latent_dim, 1200),
+            nn.ReLU(),
+            nn.Linear(1200, 1200),
+            nn.ReLU(),
+            nn.Linear(1200, img_size * img_size * num_channels),
+            nn.Sigmoid()
         )
 
         for layer in self.layers:
             if isinstance(layer, nn.Linear):
-                _xavier_init(layer)
+                torch.nn.init.uniform_(layer.weight, -0.05, 0.05)
+                torch.nn.init.zeros_(layer.bias)
 
-    def forward(self, z):
-        out = self.layers(z)
-        out = out.view(out.size(0), self.num_channels, self.img_size, self.img_size)
+    def forward(self, x):
+        return self.layers(x)
+
+
+class LinearMaxOut(nn.Module):
+    def __init__(self, input_dim, output_dim, num_pieces):
+        super(LinearMaxOut, self).__init__()
+        self.output_dim = output_dim
+        self.num_pieces = num_pieces
+        self.linear = nn.Linear(input_dim, output_dim * num_pieces)
+        torch.nn.init.uniform_(self.linear.weight, -0.005, 0.005)
+        torch.nn.init.zeros_(self.linear.bias)
+
+    def forward(self, x):
+        out = self.linear(x)
+        out = out.view(out.size(0), self.num_pieces, self.output_dim)
+        out = torch.amax(out, dim=1)
         return out
 
 
@@ -50,19 +49,23 @@ class Discriminator(nn.Module):
 
         self.layers = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(num_channels * img_size * img_size, 512),
-            nn.LeakyReLU(0.2),
+            nn.Dropout(0.2),
 
-            nn.Linear(512, 256),
-            nn.LeakyReLU(0.2),
+            LinearMaxOut(img_size * img_size * num_channels, 240, 5),
+            nn.Dropout(0.5),
 
-            nn.Linear(256, 1),
+            LinearMaxOut(240, 240, 5),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+
+            nn.Linear(240, 1),
             nn.Sigmoid(),
         )
 
         for layer in self.layers:
             if isinstance(layer, nn.Linear):
-                _xavier_init(layer)
+                torch.nn.init.uniform_(layer.weight, -0.005, 0.005)
+                torch.nn.init.zeros_(layer.bias)
 
     def forward(self, x):
         out = self.layers(x)
